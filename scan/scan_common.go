@@ -158,20 +158,23 @@ func (fs FamilySet) RunScans(host, family, scanner string) (map[string]FamilyRes
 			for scannerName, scanner := range family.Scanners {
 				if scannerRegexp.MatchString(scannerName) {
 					grade, output, err := scanner.Scan(host)
+					if grade != Skipped {
+						result := ScannerResult{
+							Grade:  grade.String(),
+							Output: output,
+						}
+						if err != nil {
+							result.Error = err.Error()
+						}
 
-					result := ScannerResult{
-						Grade:  grade.String(),
-						Output: output,
+						scannerResults[scannerName] = result
 					}
-					if err != nil {
-						result.Error = err.Error()
-					}
-
-					scannerResults[scannerName] = result
 				}
 			}
 
-			familyResults[familyName] = scannerResults
+			if len(scannerResults) > 0 {
+				familyResults[familyName] = scannerResults
+			}
 		}
 	}
 	return familyResults, nil
